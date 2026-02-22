@@ -3,9 +3,11 @@
 import { MapPin, GraduationCap, Calendar, Users } from "lucide-react";
 import { useState } from "react";
 
+import { StepData } from "../types";
+
 interface AcademicStepProps {
-  data: any;
-  updateData: (data: any) => void;
+  data: StepData;
+  updateData: (data: Partial<StepData>) => void;
   onNext: () => void;
 }
 

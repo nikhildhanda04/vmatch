@@ -4,8 +4,10 @@ import { CheckCircle2, MapPin, GraduationCap, Building } from "lucide-react";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
+import { StepData } from "../types";
+
 interface PreviewStepProps {
-  data: any;
+  data: StepData;
   onComplete: () => void;
   onBack: () => void;
 }
@@ -112,7 +114,7 @@ export default function PreviewStep({ data, onComplete, onBack }: PreviewStepPro
           ))}
 
           {/* If there are more prompts than photos (not normally possible based on limits, but safe fallback) */}
-          {data.prompts?.slice(data.photos?.length - 1).map((prompt: any, i: number) => (
+          {data.prompts?.slice(data.photos?.length - 1).map((prompt: { question: string; answer: string }, i: number) => (
             prompt.question && prompt.answer && (
               <div key={`extra-prompt-${i}`} className="p-6 md:p-8 rounded-3xl bg-neutral-900 border border-white/5 shadow-inner">
                 <h4 className="text-sm md:text-base font-semibold text-orange-400/90 mb-3 tracking-wide">{prompt.question}</h4>

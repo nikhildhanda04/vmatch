@@ -3,9 +3,11 @@
 import { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
+import { StepData } from "../types";
+
 interface HeightStepProps {
-  data: any;
-  updateData: (data: any) => void;
+  data: StepData;
+  updateData: (data: Partial<StepData>) => void;
   onNext: () => void;
   onBack: () => void;
 }

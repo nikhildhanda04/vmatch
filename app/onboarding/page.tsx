@@ -12,6 +12,7 @@ import PromptsStep from "@/app/onboarding/components/prompts-step";
 import PhotosStep from "@/app/onboarding/components/photos-step";
 import PreviewStep from "@/app/onboarding/components/preview-step";
 import { submitOnboarding } from "@/app/actions/onboarding";
+import { Gender, InterestedIn } from "@prisma/client";
 
 const steps = [
   { id: "academic", title: "The Basics" },
@@ -56,15 +57,15 @@ export default function OnboardingPage() {
     try {
       const result = await submitOnboarding({
         ...formData,
-        gender: formData.gender as any,
-        interestedIn: formData.interestedIn as any,
+        gender: formData.gender as Gender,
+        interestedIn: formData.interestedIn as InterestedIn,
       });
       if (result.success) {
         router.push("/feed");
       } else {
         alert(result.error);
       }
-    } catch (err) {
+    } catch {
       alert("Something went wrong");
     }
   };

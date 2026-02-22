@@ -3,9 +3,11 @@
 import { useState, useRef } from "react";
 import { Plus, X, Crop, Upload } from "lucide-react";
 
+import { StepData } from "../types";
+
 interface PhotosStepProps {
-  data: any;
-  updateData: (data: any) => void;
+  data: StepData;
+  updateData: (data: Partial<StepData>) => void;
   onNext: () => void;
   onBack: () => void;
 }

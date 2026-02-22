@@ -16,7 +16,12 @@ type FeedUser = PrismaUser & {
 
 interface FeedClientProps {
   initialProfiles: FeedUser[];
-  currentUser: any;
+  currentUser: {
+    id: string;
+    gender: string | null;
+    interestedIn: string | null;
+    isComplete: boolean;
+  };
 }
 
 export default function FeedClient({ initialProfiles, currentUser }: FeedClientProps) {

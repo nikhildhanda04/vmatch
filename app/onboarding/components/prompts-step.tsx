@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
 
+import { StepData } from "../types";
+
 interface PromptsStepProps {
-  data: any;
-  updateData: (data: any) => void;
+  data: StepData;
+  updateData: (data: Partial<StepData>) => void;
   onNext: () => void;
   onBack: () => void;
 }

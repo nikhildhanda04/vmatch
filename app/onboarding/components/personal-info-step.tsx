@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { UserCircle, MapPin } from "lucide-react";
 
+import { StepData } from "../types";
+
 interface PersonalInfoStepProps {
-  data: any;
-  updateData: (data: any) => void;
+  data: StepData;
+  updateData: (data: Partial<StepData>) => void;
   onNext: () => void;
   onBack: () => void;
 }
