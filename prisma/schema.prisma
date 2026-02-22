@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Vmatch specific attributes
+  gender        Gender?
+  interestedIn  InterestedIn?
+  bio           String?
+  age           Int?
+  hometown      String?
+  branch        String?
+  batch         String?
+  year          String?
+  isHosteler    Boolean?
+  height        Int?      // Stored in inches
+  isComplete    Boolean   @default(false)
+
+  sessions      Session[]
+  accounts      Account[]
+  prompts       Prompt[]
+  photos        Photo[]
+
+  likesGiven    Like[]    @relation("LikesGiven")
+  likesReceived Like[]    @relation("LikesReceived")
+  matches1      Match[]   @relation("User1Matches")
+  matches2      Match[]   @relation("User2Matches")
+
+  @@map("user")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum InterestedIn {
+  MALE
+  FEMALE
+  EVERYONE
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Prompt {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  fromId    String
+  from      User     @relation("LikesGiven", fields: [fromId], references: [id], onDelete: Cascade)
+  toId      String
+  to        User     @relation("LikesReceived", fields: [toId], references: [id], onDelete: Cascade)
+  status    LikeStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([fromId, toId])
+  @@index([fromId])
+  @@index([toId])
+}
+
+enum LikeStatus {
+  PENDING
+  MATCHED
+  REJECTED
+}
+
+model Match {
+  id        String   @id @default(cuid())
+  user1Id   String
+  user1     User     @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2Id   String
+  user2     User     @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+}
