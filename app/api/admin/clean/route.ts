@@ -13,7 +13,8 @@ export async function GET() {
       }
     });
     return NextResponse.json({ success: true, count: result.count });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "An unknown error occurred";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
