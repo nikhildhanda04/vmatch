@@ -81,14 +81,14 @@ export default function FeedClient({ initialProfiles, currentUser }: FeedClientP
   }
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Top Navbar Simple */}
-      <header className="fixed top-0 inset-x-0 h-16 bg-gradient-to-b from-black/80 to-transparent z-40 flex justify-center items-center pointer-events-none">
+    <div className="flex flex-col h-[100dvh]">
+      {/* Top Mobile Header (Optional, since we have bottom nav, but good for branding) */}
+      <header className="md:hidden flex h-16 items-center justify-center shrink-0">
         <span className="font-bold text-xl tracking-tight text-white/90 drop-shadow-md">Vmatch.</span>
       </header>
 
       {/* Profile Stack */}
-      <main className="flex-1 overflow-hidden relative">
+      <main className="flex-1 relative w-full h-full overflow-hidden">
         <AnimatePresence>
           {activeProfile && (
             <motion.div
@@ -100,9 +100,9 @@ export default function FeedClient({ initialProfiles, currentUser }: FeedClientP
                 opacity: 0,
                 rotate: loadingAction === "LIKE" ? 15 : -15 
               }}
-              className="absolute inset-0 h-full w-full max-w-3xl mx-auto overflow-y-auto pb-32"
+              className="absolute inset-0 h-full w-full overflow-y-auto pb-32 no-scrollbar"
             >
-              <div className="p-4 pt-16 space-y-4">
+              <div className="p-4 md:pt-8 space-y-4">
                 
                 {/* Main Photo Card (Index 0) */}
                 {activeProfile.photos[0] && (
@@ -182,7 +182,7 @@ export default function FeedClient({ initialProfiles, currentUser }: FeedClientP
 
       {/* Floating Action Buttons */}
       {activeProfile && (
-        <div className="fixed bottom-8 inset-x-0 z-50 flex justify-center items-center gap-6 px-6 pointer-events-none">
+        <div className="absolute bottom-8 inset-x-0 z-50 flex justify-center items-center gap-6 px-6 pointer-events-none">
           <button
             onClick={() => handleAction("REJECTED")}
             disabled={loadingAction !== null}
@@ -202,7 +202,7 @@ export default function FeedClient({ initialProfiles, currentUser }: FeedClientP
       )}
 
       {/* Blur Gradient behind buttons */}
-      <div className="fixed bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-30" />
+      <div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black via-black/80 to-transparent pointer-events-none z-30 rounded-b-[2rem]" />
     </div>
   );
 }
