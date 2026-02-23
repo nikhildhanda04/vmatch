@@ -18,7 +18,39 @@ export default function PhotosStep({ data, updateData, onNext, onBack }: PhotosS
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let { width, height } = img;
+          const max_size = 800;
+
+          if (width > height && width > max_size) {
+            height *= max_size / width;
+            width = max_size;
+          } else if (height > max_size) {
+            width *= max_size / height;
+            height = max_size;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.7)); // High compression
+        };
+        img.onerror = reject;
+      };
+      reader.onerror = reject;
+    });
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
@@ -29,24 +61,24 @@ export default function PhotosStep({ data, updateData, onNext, onBack }: PhotosS
 
     setError(null);
 
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos((prev) => {
-          const newPhotos = [...prev, reader.result as string];
-          updateData({ photos: newPhotos });
-          return newPhotos;
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      const compressedPhotos = await Promise.all(files.map(compressImage));
+      
+      setPhotos((prev) => {
+        const newPhotos = [...prev, ...compressedPhotos];
+        setTimeout(() => updateData({ photos: newPhotos }), 0);
+        return newPhotos;
+      });
+    } catch (err) {
+      setError("Failed to process some images. Please try again.");
+    }
   };
 
   const removePhoto = (index: number) => {
     setPhotos((prev) => {
       const newPhotos = [...prev];
       newPhotos.splice(index, 1);
-      updateData({ photos: newPhotos });
+      setTimeout(() => updateData({ photos: newPhotos }), 0);
       return newPhotos;
     });
   };

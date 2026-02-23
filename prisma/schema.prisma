@@ -38,6 +38,7 @@ model User {
   likesReceived Like[]    @relation("LikesReceived")
   matches1      Match[]   @relation("User1Matches")
   matches2      Match[]   @relation("User2Matches")
+  messagesSent  Message[] @relation("MessagesSent")
 
   @@map("user")
 }
@@ -146,14 +147,29 @@ enum LikeStatus {
 }
 
 model Match {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   user1Id   String
-  user1     User     @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
+  user1     User      @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
   user2Id   String
-  user2     User     @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  user2     User      @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  
+  messages  Message[]
 
   @@unique([user1Id, user2Id])
   @@index([user1Id])
   @@index([user2Id])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  matchId   String
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation("MessagesSent", fields: [senderId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([matchId])
+  @@index([senderId])
 }

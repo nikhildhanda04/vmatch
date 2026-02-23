@@ -21,6 +21,7 @@ export default async function FeedPage() {
       id: true, 
       gender: true, 
       interestedIn: true, 
+      age: true,
       isComplete: true 
     }
   });
@@ -34,12 +35,21 @@ export default async function FeedPage() {
     ? undefined 
     : { gender: currentUser.interestedIn };
 
+  const currentAge = currentUser.age || 20;
+  const ageFilter = {
+    age: {
+      gte: Math.max(18, currentAge - 4),
+      lte: currentAge + 4
+    }
+  };
+
   // Fetch users that the current user hasn't liked or rejected yet
   const potentialMatches = await prisma.user.findMany({
     where: {
       isComplete: true,
       id: { not: currentUser.id }, // Don't show themselves
       ...genderFilter,
+      ...ageFilter,
       // Filter out people they have already liked/passed
       likesReceived: {
         none: {
@@ -60,7 +70,7 @@ export default async function FeedPage() {
 
   return (
     <div className="min-h-screen bg-black text-white relative">
-      <FeedClient initialProfiles={potentialMatches} currentUser={currentUser} />
+      <FeedClient initialProfiles={potentialMatches} />
     </div>
   );
 }

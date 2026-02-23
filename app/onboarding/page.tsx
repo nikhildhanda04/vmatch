@@ -11,7 +11,6 @@ import HeightStep from "@/app/onboarding/components/height-step";
 import PromptsStep from "@/app/onboarding/components/prompts-step";
 import PhotosStep from "@/app/onboarding/components/photos-step";
 import PreviewStep from "@/app/onboarding/components/preview-step";
-import { submitOnboarding } from "@/app/actions/onboarding";
 import { Gender, InterestedIn } from "@prisma/client";
 
 const steps = [
@@ -55,15 +54,22 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     try {
-      const result = await submitOnboarding({
-        ...formData,
-        gender: formData.gender as Gender,
-        interestedIn: formData.interestedIn as InterestedIn,
+      const response = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          gender: formData.gender as Gender,
+          interestedIn: formData.interestedIn as InterestedIn,
+        }),
       });
-      if (result.success) {
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
         router.push("/feed");
       } else {
-        alert(result.error);
+        alert(result.error || "Failed to complete onboarding.");
       }
     } catch {
       alert("Something went wrong");

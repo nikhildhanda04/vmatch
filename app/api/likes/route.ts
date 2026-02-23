@@ -22,6 +22,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid request data" }, { status: 400 });
     }
 
+    // --- DAILY LIMIT CHECK ---
+    if (status === "MATCHED") {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const likesToday = await prisma.like.count({
+        where: {
+          fromId: session.user.id,
+          status: "MATCHED",
+          createdAt: {
+            gte: startOfDay
+          }
+        }
+      });
+
+      if (likesToday >= 10) {
+        return NextResponse.json(
+          { error: "You've reached your 10 like limit for today. Come back tomorrow!" }, 
+          { status: 429 }
+        );
+      }
+    }
+    // -------------------------
+
     // 1. Check if the other person already liked the current user
     const existingLikeFromOther = await prisma.like.findUnique({
       where: {

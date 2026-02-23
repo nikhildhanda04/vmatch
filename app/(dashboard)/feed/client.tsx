@@ -16,15 +16,9 @@ type FeedUser = PrismaUser & {
 
 interface FeedClientProps {
   initialProfiles: FeedUser[];
-  currentUser: {
-    id: string;
-    gender: string | null;
-    interestedIn: string | null;
-    isComplete: boolean;
-  };
 }
 
-export default function FeedClient({ initialProfiles, currentUser }: FeedClientProps) {
+export default function FeedClient({ initialProfiles }: FeedClientProps) {
   const [profiles, setProfiles] = useState<FeedUser[]>(initialProfiles);
   const [loadingAction, setLoadingAction] = useState<"LIKE" | "PASS" | null>(null);
 
@@ -53,7 +47,15 @@ export default function FeedClient({ initialProfiles, currentUser }: FeedClientP
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to action");
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 429) {
+          alert(data.error || "Daily limit reached.");
+          return; // Don't swipe away the profile if limit is reached
+        }
+        throw new Error(data.error || "Failed to action");
+      }
 
       // Animate out the profile
       setProfiles((prev) => prev.slice(1));
@@ -72,7 +74,7 @@ export default function FeedClient({ initialProfiles, currentUser }: FeedClientP
         <div className="w-24 h-24 bg-neutral-900 rounded-full flex items-center justify-center mb-4">
           <Star className="w-10 h-10 text-orange-500 opacity-50" />
         </div>
-        <h2 className="text-3xl font-bold tracking-tight">You've caught up!</h2>
+        <h2 className="text-3xl font-bold tracking-tight">You&apos;ve caught up!</h2>
         <p className="text-neutral-400 max-w-sm">
           There are no more new profiles in your queue matching your preferences right now. Check back later!
         </p>
@@ -131,7 +133,7 @@ export default function FeedClient({ initialProfiles, currentUser }: FeedClientP
                           {(activeProfile.branch || activeProfile.year) && (
                             <div className="flex items-center gap-2 text-sm">
                               <GraduationCap className="w-4 h-4 text-orange-400" />
-                              {activeProfile.branch} '{activeProfile.year?.slice(2)}
+                              {activeProfile.branch} &apos;{activeProfile.year?.slice(2)}
                             </div>
                           )}
                           {activeProfile.isHosteler !== null && (
@@ -159,7 +161,7 @@ export default function FeedClient({ initialProfiles, currentUser }: FeedClientP
                     {activeProfile.prompts[index] && (
                       <div className="p-8 rounded-3xl bg-neutral-900/50 border border-white/5 shadow-inner">
                         <h4 className="text-sm font-bold text-orange-400/90 mb-3 tracking-wide uppercase">{activeProfile.prompts[index].question}</h4>
-                        <p className="text-3xl font-serif text-white leading-tight">"{activeProfile.prompts[index].answer}"</p>
+                        <p className="text-3xl font-serif text-white leading-tight">&quot;{activeProfile.prompts[index].answer}&quot;</p>
                       </div>
                     )}
                     
