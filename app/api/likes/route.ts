@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { PrismaClient, LikeStatus } from "@prisma/client";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { sendEmail, getNewLikeTemplate, getNewMatchTemplate } from "@/lib/email";
 
 const prisma = new PrismaClient();
 
@@ -57,7 +58,7 @@ export async function POST(req: Request) {
     });
 
     // 2. Record the current user's action
-    const currentLike = await prisma.like.upsert({
+    await prisma.like.upsert({
       where: {
         fromId_toId: {
           fromId: session.user.id,
@@ -73,6 +74,19 @@ export async function POST(req: Request) {
         status: status as LikeStatus
       }
     });
+
+    // Send "New Like" email if this is a fresh PENDING like directed at them
+    if (status === "PENDING" && !existingLikeFromOther) {
+      const recipient = await prisma.user.findUnique({ where: { id: toId }, select: { email: true } });
+      if (recipient?.email) {
+        // We don't await this so it doesn't block the API response
+        sendEmail({
+          to: recipient.email,
+          subject: "Someone likes you on Vmatch! 👀",
+          html: getNewLikeTemplate(session.user.name.split(" ")[0]),
+        }).catch(console.error);
+      }
+    }
 
     // 3. If mutual match, create Match record
     let isMutualMatch = false;
@@ -100,7 +114,27 @@ export async function POST(req: Request) {
         }
       });
       
-      // TODO: Trigger Email Notification here
+      // Trigger Email Notification for Mutual Match
+      const likedUser = await prisma.user.findUnique({ where: { id: toId }, select: { email: true, name: true } });
+      const currentUserEmail = session.user.email; // We know session has email
+
+      if (likedUser?.email) {
+        // Email the person who was just matched with
+        sendEmail({
+          to: likedUser.email,
+          subject: "You have a new Match on Vmatch! 🎉",
+          html: getNewMatchTemplate(session.user.name.split(" ")[0]),
+        }).catch(console.error);
+      }
+      
+      if (currentUserEmail) {
+        // Email the current swiper
+        sendEmail({
+           to: currentUserEmail,
+           subject: "You have a new Match on Vmatch! 🎉",
+           html: getNewMatchTemplate(likedUser?.name?.split(" ")[0] || "Someone"),
+        }).catch(console.error)
+      }
     }
 
     return NextResponse.json({ success: true, isMutualMatch });

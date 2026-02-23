@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ChevronLeft, Send, Phone, Video, MoreVertical } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 type MinimalUser = {
   id: string;
@@ -48,7 +50,7 @@ export default function ChatClient({
       if (res.ok) {
         const data = await res.json();
         // The API returns timestamp as string (ISO), we convert to Date for formatting
-        setMessages(data.messages.map((m: any) => ({
+        setMessages(data.messages.map((m: { createdAt: string | number | Date }) => ({
           ...m,
           timestamp: new Date(m.createdAt)
         })));
@@ -135,26 +137,39 @@ export default function ChatClient({
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
         {messages.length === 0 && (
-           <div className="flex flex-col items-center justify-center h-full text-neutral-500 mt-10">
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.9 }} 
+             animate={{ opacity: 1, scale: 1 }} 
+             className="flex flex-col items-center justify-center h-full text-neutral-500 mt-10"
+           >
               <p className="text-sm">No messages yet.</p>
               <p className="text-xs mt-1">Say hi to {otherUser.name.split(" ")[0]}!</p>
-           </div>
+           </motion.div>
         )}
 
-        {messages.map((msg, i) => {
-          const isMine = msg.senderId === currentUser.id;
-          const showAvatar = !isMine && (i === 0 || messages[i - 1]?.senderId !== msg.senderId);
+        <AnimatePresence initial={false}>
+          {messages.map((msg, i) => {
+            const isMine = msg.senderId === currentUser.id;
+            const showAvatar = !isMine && (i === 0 || messages[i - 1]?.senderId !== msg.senderId);
 
-          return (
-            <div key={msg.id} className={`flex w-full ${isMine ? "justify-end" : "justify-start"}`}>
+            return (
+              <motion.div 
+                key={msg.id} 
+                initial={{ opacity: 0, y: 15, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className={`flex w-full ${isMine ? "justify-end" : "justify-start"}`}
+              >
               <div className={`flex max-w-[75%] gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
                 
                 {/* Avatar dot for other user */}
                 {!isMine && (
                   <div className="w-6 shrink-0 flex flex-col justify-end pb-1">
                     {showAvatar && (
-                      <div className="w-6 h-6 rounded-full overflow-hidden bg-neutral-800">
-                        {otherUser.photoUrl && <img src={otherUser.photoUrl} className="w-full h-full object-cover" />}
+                      <div className="w-6 h-6 rounded-full overflow-hidden bg-neutral-800 relative">
+                        {otherUser.photoUrl && (
+                          <Image src={otherUser.photoUrl} alt={otherUser.name} fill className="object-cover" sizes="24px" />
+                        )}
                       </div>
                     )}
                   </div>
@@ -177,9 +192,35 @@ export default function ChatClient({
                 </div>
 
               </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+
+        {/* Mock Typing Indicator (Just for polish demonstration) */}
+        {messages.length > 0 && messages[messages.length - 1].senderId === currentUser.id && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start pt-2"
+          >
+            <div className="flex max-w-[75%] gap-2 flex-row">
+                <div className="w-6 shrink-0 flex flex-col justify-end pb-1">
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-neutral-800 relative">
+                        {otherUser.photoUrl && (
+                            <Image src={otherUser.photoUrl} alt={otherUser.name} fill className="object-cover" sizes="24px" />
+                        )}
+                    </div>
+                </div>
+                <div className="bg-neutral-800 px-4 py-3 rounded-2xl rounded-bl-sm border border-white/5 flex gap-1 items-center">
+                    <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-neutral-500 rounded-full" />
+                    <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-neutral-500 rounded-full" />
+                    <motion.div animate={{ y: [0, -4, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-neutral-500 rounded-full" />
+                </div>
             </div>
-          );
-        })}
+          </motion.div>
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 

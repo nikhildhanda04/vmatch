@@ -43,19 +43,35 @@ export default async function FeedPage() {
     }
   };
 
-  // Fetch users that the current user hasn't liked or rejected yet
+  // Fetch users that the current user hasn't liked or rejected yet, and isn't already matched with
   const potentialMatches = await prisma.user.findMany({
     where: {
       isComplete: true,
       id: { not: currentUser.id }, // Don't show themselves
       ...genderFilter,
       ...ageFilter,
-      // Filter out people they have already liked/passed
-      likesReceived: {
-        none: {
-          fromId: currentUser.id
+      // Filter out people they have already liked/passed or matched with
+      AND: [
+        {
+          // Don't show people the current user has already acted upon (liked or rejected)
+          likesReceived: {
+            none: {
+              fromId: currentUser.id
+            }
+          }
+        },
+        {
+           // Don't show people who have matched with the current user via another flow (just in case)
+           matches1: {
+             none: { user2Id: currentUser.id }
+           }
+        },
+        {
+           matches2: {
+             none: { user1Id: currentUser.id }
+           }
         }
-      }
+      ]
     },
     include: {
       prompts: {

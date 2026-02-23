@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Heart, MessageSquare, User } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -22,7 +23,7 @@ export function Sidebar() {
           Vmatch.
         </div>
 
-        <nav className="flex flex-col gap-4">
+        <nav className="flex flex-col gap-2">
           {links.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
@@ -31,19 +32,26 @@ export function Sidebar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 group
+                className={`relative flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-200 group
                   ${isActive 
-                    ? "bg-white/10 text-white font-medium" 
-                    : "text-neutral-500 hover:text-white hover:bg-white/5"
+                    ? "text-white font-medium" 
+                    : "text-neutral-500 hover:text-white"
                   }
                 `}
               >
+                {isActive && (
+                  <motion.div
+                    layoutId="desktop-active-nav"
+                    className="absolute inset-0 bg-white/10 rounded-2xl"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
                 <Icon 
-                  className={`w-6 h-6 transition-transform duration-200 group-hover:scale-110
+                  className={`w-6 h-6 z-10 transition-transform duration-200 group-hover:scale-110
                     ${isActive ? "text-orange-500" : ""}
                   `}
                 />
-                <span className="text-lg">{link.name}</span>
+                <span className="text-lg z-10">{link.name}</span>
               </Link>
             );
           })}

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { User as PrismaUser } from "@prisma/client";
-import { MapPin, GraduationCap, Building, Star, X, Check, CheckCircle2 } from "lucide-react";
+import { MapPin, GraduationCap, Building, Star, X, Check, CheckCircle2, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 // Extending the generic User type to include our relational data 
 type Prompt = { question: string; answer: string; order: number };
@@ -21,6 +22,7 @@ interface FeedClientProps {
 export default function FeedClient({ initialProfiles }: FeedClientProps) {
   const [profiles, setProfiles] = useState<FeedUser[]>(initialProfiles);
   const [loadingAction, setLoadingAction] = useState<"LIKE" | "PASS" | null>(null);
+  const [showHeartOverlay, setShowHeartOverlay] = useState(false);
 
   const activeProfile = profiles[0];
 
@@ -65,7 +67,17 @@ export default function FeedClient({ initialProfiles }: FeedClientProps) {
       alert("Something went wrong with that swipe.");
     } finally {
       setLoadingAction(null);
+      setShowHeartOverlay(false);
     }
+  };
+
+  const handleDoubleTap = () => {
+    if (loadingAction) return;
+    setShowHeartOverlay(true);
+    // Add small delay so user can see the heart animate before the card completely flies away
+    setTimeout(() => {
+      handleAction("MATCHED");
+    }, 400); 
   };
 
   if (profiles.length === 0) {
@@ -108,13 +120,33 @@ export default function FeedClient({ initialProfiles }: FeedClientProps) {
                 
                 {/* Main Photo Card (Index 0) */}
                 {activeProfile.photos[0] && (
-                  <div className="relative w-full aspect-[4/5] bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl border border-white/10">
-                    <img 
+                  <div 
+                    className="relative w-full aspect-[4/5] bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl border border-white/10"
+                    onDoubleClick={handleDoubleTap}
+                  >
+                    <Image 
                       src={activeProfile.photos[0].url} 
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="object-cover"
                       alt={`${activeProfile.name}'s photo`}
+                      fill
+                      priority
+                      sizes="(max-width: 768px) 100vw, 42rem"
                     />
                     
+                    {/* Double Tap Heart Overlay */}
+                    <AnimatePresence>
+                      {showHeartOverlay && (
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1.2 }}
+                          exit={{ opacity: 0, scale: 1.5 }}
+                          className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+                        >
+                          <Heart className="w-32 h-32 text-orange-500 fill-orange-500 drop-shadow-[0_0_30px_rgba(249,115,22,0.8)]" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     {/* Profile Details Overlay on Main Photo */}
                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent pt-32 pb-6 px-6 z-20">
                       <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight flex items-end gap-3 drop-shadow-lg">
@@ -166,11 +198,16 @@ export default function FeedClient({ initialProfiles }: FeedClientProps) {
                     )}
                     
                     {/* Next Photo Card */}
-                    <div className="relative w-full aspect-[4/5] bg-neutral-900 rounded-3xl overflow-hidden border border-white/10 shadow-lg">
-                      <img 
+                    <div 
+                      className="relative w-full aspect-[4/5] bg-neutral-900 rounded-3xl overflow-hidden border border-white/10 shadow-lg"
+                      onDoubleClick={handleDoubleTap}
+                    >
+                      <Image 
                         src={photo.url} 
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="object-cover"
                         alt={`Photo ${index + 2}`}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 42rem"
                       />
                     </div>
                   </div>
